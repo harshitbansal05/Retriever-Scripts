@@ -1,33 +1,13 @@
 """Generates a configuration file containing the version number."""
 from __future__ import absolute_import
 
-import io
 import os
-import sys
 import imp
 import json
 from os.path import join, exists
 from collections import OrderedDict
 
-ENCODING = 'ISO-8859-1'
-
-def open_fr(file_name, encoding=ENCODING, encode=True):
-    """Open file for reading respecting Python version and OS differences.
-
-    Sets newline to Linux line endings on Windows and Python 3
-    When encode=False does not set encoding on nix and Python 3 to keep as bytes
-    """
-    if sys.version_info >= (3, 0, 0):
-        if os.name == 'nt':
-            file_obj = io.open(file_name, 'r', newline='', encoding=encoding)
-        else:
-            if encode:
-                file_obj = io.open(file_name, "r", encoding=encoding)
-            else:
-                file_obj = io.open(file_name, "r")
-    else:
-        file_obj = io.open(file_name, "r", encoding=encoding)
-    return file_obj
+from src.utils import ENCODING, open_fr
 
 
 def read_json(json_file):
@@ -70,8 +50,8 @@ def read_py(script_name, search_path):
         new_module = imp.load_module(script_name, file, pathname, desc)
         if hasattr(new_module.SCRIPT, "version"):
             return new_module.SCRIPT.version
-    except Exception as e:
-        pass
+    except:
+       pass
     return None
 
 
