@@ -3,6 +3,7 @@ from __future__ import print_function
 import os
 import sys
 
+
 def delete_json(script):
     json_file = script.replace('-', '_') + '.json'
     try:

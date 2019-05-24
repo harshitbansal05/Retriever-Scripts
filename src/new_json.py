@@ -1,21 +1,22 @@
 from __future__ import print_function
 
-import json
 import os
 import re
-from builtins import input
+import json
+from os.path import join, exists
 
-ENCODING = 'ISO-8859-1'
+from utils import clean_input, is_empty, open_fr, ENCODING
+
 
 def short_names():
     search_path = 'scripts'
-    short_names = set()
+    shortnames = set()
     if exists(search_path):
         data_packages = [file_i for file_i in os.listdir(search_path) if file_i.endswith(".json")]
         for script in data_packages:
             script_name = '.'.join(script.split('.')[:-1])
             script_name = script_name.replace('_', '-')
-            short_names.add(script_name)
+            shortnames.add(script_name)
         files = [file for file in os.listdir(search_path)
                  if file[-3:] == ".py" and file[0] != "_" and
                  ('#retriever' in
@@ -24,37 +25,8 @@ def short_names():
         for script in files:
             script_name = '.'.join(script.split('.')[:-1])
             script_name = script_name.replace('_', '-')
-            short_names.add(script_name)
-    return list(short_names)
-
-
-def is_empty(val):
-    """Check if a variable is an empty string or an empty list."""
-    return val == "" or val == []
-
-
-def clean_input(prompt="", split_char='', ignore_empty=False, dtype=None):
-    """Clean the user-input from the CLI before adding it."""
-    while True:
-        val = input(prompt).strip()
-        # split to list type if split_char specified
-        if split_char != "":
-            val = [v.strip() for v in val.split(split_char) if v.strip() != ""]
-        # do not ignore empty input if not allowed
-        if not ignore_empty and is_empty(val):
-            print("\tError: empty input. Need one or more values.\n")
-            continue
-        # ensure correct input datatype if specified
-        if not is_empty(val) and dtype is not None:
-            try:
-                if not type(eval(val)) == dtype:
-                    print("\tError: input doesn't match required type ", dtype, "\n")
-                    continue
-            except:
-                print("\tError: illegal argument. Input type should be ", dtype, "\n")
-                continue
-        break
-    return val
+            shortnames.add(script_name)
+    return list(shortnames)
 
 
 def get_replace_columns(dialect):
@@ -154,8 +126,6 @@ def create_json():
     Creates datapackage.JSON script.
     http://specs.frictionlessdata.io/data-packages/#descriptor-datapackagejson
     Takes input from user via command line.
-
-    Usage: retriever new_json
     """
     contents = {}
     tableurls = {}
@@ -175,7 +145,8 @@ def create_json():
 
     contents['title'] = clean_input("title: ", ignore_empty=True)
     contents['description'] = clean_input("description: ", ignore_empty=True)
-    contents['citation'] = clean_input("citation: ", ignore_empty=True)
+    contents['citation'] = clean_input("citations (separated by ';'): ",
+                                       split_char=';', ignore_empty=True)
     contents['homepage'] = clean_input("homepage (for the entire dataset): ", ignore_empty=True)
     contents['keywords'] = clean_input("keywords (separated by ';'): ",
                                        split_char=';', ignore_empty=True)
@@ -187,7 +158,7 @@ def create_json():
         contents['encoding'] = ENCODING
     contents['version'] = "1.0.0"
 
-    # Add tables -
+    # Add tables
     while True:
         addtable = clean_input("\nAdd Table? (y/N): ")
         if addtable.lower() in ["n", "no"]:
@@ -196,7 +167,7 @@ def create_json():
             print("Not a valid option\n")
             continue
         else:
-            table = {}
+            table = dict()
             table['name'] = clean_input("table-name: ")
             table['url'] = clean_input("table-url: ")
             table['dialect'] = {}
@@ -226,7 +197,7 @@ def create_json():
                         raise Exception
 
                     col_list = [c.strip() for c in col_list]
-                    col_obj = {}  # dict to store column data
+                    col_obj = dict()  # dict to store column data
                     col_obj["name"] = col_list[0]
                     col_obj["type"] = col_list[1]
 
@@ -262,9 +233,12 @@ def create_json():
     file_name = contents['name'] + ".json"
     file_name = file_name.replace('-', '_')
     with open(os.path.join('scripts', file_name), 'w') as output_file:
-        json_str = str(json.dump(contents, output_file, sort_keys=True, indent=4,
-                              separators=(',', ': ')))
-        output_file.write(json_str + '\n')
+        json.dump(contents,
+                  output_file,
+                  sort_keys=True,
+                  indent=4,
+                  separators=(',', ': '))
+        output_file.write('\n')
         print("\nScript written to " + file_name)
         output_file.close()
 

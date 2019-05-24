@@ -1,40 +1,18 @@
 from __future__ import print_function
 
-import json
 import os
 import sys
-from builtins import input
+import json
 from time import sleep
 
-def clean_input(prompt="", split_char='', ignore_empty=False, dtype=None):
-    """Clean the user-input from the CLI before adding it."""
-    while True:
-        val = input(prompt).strip()
-        # split to list type if split_char specified
-        if split_char != "":
-            val = [v.strip() for v in val.split(split_char) if v.strip() != ""]
-        # do not ignore empty input if not allowed
-        if not ignore_empty and is_empty(val):
-            print("\tError: empty input. Need one or more values.\n")
-            continue
-        # ensure correct input datatype if specified
-        if not is_empty(val) and dtype is not None:
-            try:
-                if not type(eval(val)) == dtype:
-                    print("\tError: input doesn't match required type ", dtype, "\n")
-                    continue
-            except:
-                print("\tError: illegal argument. Input type should be ", dtype, "\n")
-                continue
-        break
-    return val
+from utils import clean_input
 
 
 def edit_dict(obj, tabwidth=0):
     """
     Recursive helper function for edit_json() to edit a datapackage.JSON script file.
     """
-    for key, val in obj.items():
+    for key, val in obj.copy().items():
         print('\n' + "  " * tabwidth + "->" + key + " (", type(val), ") :\n")
         if isinstance(val, list):
             for v in val:
@@ -203,11 +181,13 @@ def edit_json(script):
     file_name = contents['name'] + ".json"
     file_name = file_name.replace('-', '_')
     with open(os.path.join('scripts', file_name), 'w') as output_file:
-        json_str = str(json.dump(contents, output_file, sort_keys=True, indent=4,
-                              separators=(',', ': ')))
-        output_file.write(json_str + '\n')
-        print("\nScript written to " +
-              os.path.join('scripts', file_name))
+        json.dump(contents,
+                  output_file,
+                  sort_keys=True,
+                  indent=4,
+                  separators=(',', ': '))
+        output_file.write('\n')
+        print("\nScript written to " + os.path.join('scripts', file_name))
         output_file.close()
 
 
