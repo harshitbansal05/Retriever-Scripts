@@ -1,0 +1,7 @@
+language: python
+sudo: required
+
+install: 
+  - pip install retriever
+script:
+  - python test/test_modified_scripts.py

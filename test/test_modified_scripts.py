@@ -128,9 +128,10 @@ def install_modified():
         print("Engine, Dataset, Error")
         for error in errors:
             print(error)
+        exit(1)
     else:
         print("All tests passed. All scripts are updated to latest version.")
-
+        exit(0)
 
 if __name__ == "__main__":
     install_modified()
